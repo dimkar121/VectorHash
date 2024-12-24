@@ -3,9 +3,10 @@ import numpy as np
 import faiss
 
 if __name__ == '__main__':
-    df1 = pd.read_parquet("./data/Amazon_embedded_t5.pqt")
-    df2 = pd.read_parquet(
-        "./data/Google_embedded_t5.pqt")  # , sep=",", encoding="unicode_escape", keep_default_na=False)
+    model = "mini"
+    d = 384
+    df1 = pd.read_parquet(f"./data/Amazon_embedded_{model}.pqt")
+    df2 = pd.read_parquet(f"./data/Google_embedded_{model}.pqt")  # , sep=",", encoding="unicode_escape", keep_default_na=False)
     truth = pd.read_csv("./data/truth_Amazon_GoogleProducts.csv", sep=",", encoding="unicode_escape",
                         keep_default_na=False)
     truthD = dict()
@@ -17,13 +18,13 @@ if __name__ == '__main__':
 
     tp = 0
     fp = 0
-    index = faiss.IndexHNSWFlat(768, 32)
+    index = faiss.IndexHNSWFlat(d, 32)
     index.hnsw.efConstruction = 60
     index.hnsw.efSearch = 16
 
     n = 0
     num_rows = df1.shape[0]
-    data = np.zeros((num_rows, 768), dtype='float32')
+    data = np.zeros((num_rows, d), dtype='float32')
     ids = []
 
     for i1, r1 in df1.iterrows():
@@ -45,7 +46,7 @@ if __name__ == '__main__':
         description = r2["description"]
         id2 = r2["id"]
         de2 = np.array([r2["v"]])  # embed_sentences_with_distilbert(name.lower() + " " + description.lower())
-        k = 4  # Number of neighbors to retrieve
+        k = 5  # Number of neighbors to retrieve
         distances, indices = index.search(de2, k)
 
         for ind in indices[0]:
